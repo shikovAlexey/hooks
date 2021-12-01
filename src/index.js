@@ -1,17 +1,72 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React, { useState, useEffect } from "react";
+import reactDom from "react-dom";
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+const App = () => {
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+    const [value, setValue] = useState(1);
+    const [visible, setVisible] = useState(true);
+
+    if (visible) {
+        return (
+            <div>
+                <button
+                    onClick={() => {
+                        if (value < 60) {
+                            setValue((v) => ++v)
+                        }
+                    }
+                    }
+                >
+                    +
+                </button>
+                <button
+                    onClick={() => {
+                        if (value > 1) {
+                            setValue((v) => --v)
+                        }
+                    }
+                    }
+                >
+                    -
+                </button>
+                <button
+                    onClick={() => setVisible(false)}
+                >
+                    hide
+                </button>
+                <PlanetInfo id={value} />
+            </div>
+        );
+    } else {
+        return <button
+            onClick={() => setVisible(true)}
+        >
+            show
+        </button>
+    }
+}
+
+const PlanetInfo = ({ id }) => {
+
+    const [planetName, setPlanetName] = useState(null);
+
+    function getPlanetName(id) {
+        let cancelled = false
+        fetch(`https://swapi.dev/api/planets/` + id)
+            .then(res => res.json())
+            .then((planet) => !cancelled && setPlanetName(planet.name))
+        return () => cancelled = true;
+    }
+
+    useEffect(() => {
+        getPlanetName(id)
+    }, [id]);
+
+    return (
+        <div>
+            {id} - {planetName}
+        </div>
+    );
+};
+
+reactDom.render(<App />, document.getElementById('root'));
