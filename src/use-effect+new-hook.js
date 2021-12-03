@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import reactDom from "react-dom";
 
 const App = () => {
@@ -46,66 +46,32 @@ const App = () => {
     }
 }
 
-const getPlanet = (id) => {
-    return fetch(`https://swapi.dev/api/planets/` + id)
-        .then(res => res.json())
-        .then((data) => data)
-};
+const usePlanetInfo = (id) => {
 
-const useRequest = (request) => {
+    const [planetName, setPlanetName] = useState(null);
 
-    const initialState = useMemo(() => ({
-        data: null,
-        loading: true,
-        error: false
-    }), [])
-
-    const [dataState, setDataState] = useState(initialState);
+    function getPlanetName(id) {
+        let cancelled = false;
+        fetch(`https://swapi.dev/api/planets/` + id)
+            .then(res => res.json())
+            .then((planet) => !cancelled && setPlanetName(planet.name))
+        return () => cancelled = true;
+    };
 
     useEffect(() => {
-        let cancelled = false;
-        setDataState(initialState);
-        request()
-            .then((data) => !cancelled && setDataState({
-                data,
-                loading: false,
-                error: false
-            }))
-            .catch(error => !cancelled && setDataState({
-                data: null,
-                loading: false,
-                error: true
-            }))
-        return () => cancelled = true;
-    }, [request, initialState]);
+        getPlanetName(id)
+    }, [id]);
 
-    return dataState;
-};
-
-const usePlanetInfo = (id) => {
-    const request = useCallback(() => getPlanet(id), [id])
-    return useRequest(request);
-
+    return planetName;
 }
 
 const PlanetInfo = ({ id }) => {
 
-    const { data, loading, error } = usePlanetInfo(id);
-
-    if (error) {
-        return (
-            <div>Something is wrong</div>
-        );
-    }
-    if (loading) {
-        return (
-            <div>loading...</div>
-        );
-    }
+    const name = usePlanetInfo(id);
 
     return (
         <div>
-            {id} - {data.name}
+            {id} - {name}
         </div>
     );
 };
